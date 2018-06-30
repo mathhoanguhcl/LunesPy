@@ -59,31 +59,12 @@ __lunespy.Address(address, publicKey, privateKey, seed)__ _Creates a new Address
 
 `massTransferLunes(self, transfers, attachment='', timestamp=0)` sending an asset via mass transfer
 
-`cancelOrder(assetPair, order)` cancel an order
-
-`buy(assetPair, amount price, maxLifetime=30*86400, matcherFee=DEFAULT_MATCHER_FEE, timestamp=0)` post a buy order
-
-`tradableBalance(assetPair)` get tradable balance for the specified asset pair
-
-`sell(assetPair, amount, price, maxLifetime=30*86400, matcherFee=DEFAULT_MATCHER_FEE, timestamp=0)` post a sell order
-
 `lease(recipient, amount, txFee=DEFAULT_LEASE_FEE, timestamp=0)` post a lease transaction
 
 `leaseCancel(leaseId, txFee=DEFAULT_LEASE_FEE, timestamp=0)` cancel a lease
 
-`getOrderHistory(assetPair)` get order history for the specified asset pair
-
-`cancelOpenOrders(assetPair)` cancel all open orders for the specified asset pair
-
-`deleteOrderHistory(assetPair)` delete order history for the specified asset pair
-
 `createAlias(alias, txFee=DEFAULT_ALIAS_FEE, timestamp=0)` create alias
 
-`sponsorAsset(assetId, minimalFeeInAssets, txFee=lunespy.DEFAULT_SPONSOR_FEE, timestamp=0)` sponsoring assets
-
-`setScript(script, txFee=lunespy.DEFAULT_SCRIPT_FEE, timestamp=0)` sets a script for this address
-
-`dataTransaction(data, timestamp=0)` sets data for the account. data should be a json array with entries including type (bool, binary, int, string), key and value
 
 ### Asset Class
 __lunespy.Asset(assetId)__ _Creates a new Asset object_
@@ -100,45 +81,6 @@ __lunespy.Asset(assetId)__ _Creates a new Asset object_
 
 #### methods:
 `status()` returns 'Issued' if the asset exists
-
-
-### AssetPair Class
-__lunespy.AssetPair(asset1, asset2)__ _Creates a new AssetPair object with 2 Asset objects_
-
-#### attributes:
-- _asset1_
-- _asset2_
-
-#### methods:
-`orderbook()` get order book
-`ticker()` get ticker with 24h ohlcv data
-`last()` get traded price
-`open()` get 24h open price
-`high()` get 24h high price
-`low()` get 24h low price
-`close()` get 24h close price (same as last())
-`vwap()` get 24h vwap price
-`volume()` get 24h volume
-`priceVolume()` get 24h price volume
-`trades(n)` get the last n trades
-`trades(from, to)` get the trades in from/to interval
-`candles(timeframe, n)` get the last n candles in the specified timeframe
-`candles(timeframe, from, to)` get the candles in from/to interval in the specified timeframe
-
-### Order Class
-__lunespy.Order(orderId, assetPair, address='')__ Creates a new Order object
-
-#### attributes:
-- _status_
-- _orderId_
-- _assetPair_
-- _address_
-- _matcher_
-- _matcherPublicKey_
-
-#### methods:
-`status()` returns current order status
-`cancel()` cancel the order
 
 
 ## Other functions
@@ -164,12 +106,6 @@ __lunespy.Order(orderId, assetPair, address='')__ Creates a new Order object
 
 `lunespy.tx(id)` get transaction details
 
-`lunespy.symbols()` get list of symbol-asset mapping
-
-`lunespy.markets()` get all traded markets with tickers
-
-`lunespy.{SYMBOL_NAME}` get predefined asset for the specified symbol (lunespy.LUNES, lunespy.BTC, lunespy.USD,...)
-
 
 ### Default Fees
 The fees for lunes/asset transfers, asset issue/reissue/burn and matcher transactions are set by default as follows:
@@ -178,8 +114,6 @@ The fees for lunes/asset transfers, asset issue/reissue/burn and matcher transac
 * DEFAULT_MATCHER_FEE = 1000000
 * DEFAULT_LEASE_FEE = 100000
 * DEFAULT_ALIAS_FEE = 100000
-* DEFAULT_SPONSOR_FEE = 100000000
-* DEFAULT_SCRIPT_FEE = 100000
 
 ## More Examples
 
@@ -318,63 +252,6 @@ for address in lines:
 	myAddress.sendAsset(lp.Address(address.strip()), myToken, amount)
 ```
 
-#### Playing with Lunes Matcher node (DEX):
-```python	
-import lunespy as lp
-
-# set Matcher node to use
-lp.setMatcher(node = 'http://127.0.0.1:6886')
-
-# post a buy order
-BTC = lp.Asset('4ZzED8WJXsvuo2MEm2BmZ87Azw8Sx7TVC6ufSUA5LyTV')
-USD = lp.Asset('6wuo2hTaDyPQVceETj1fc5p4WoMVCGMYNASN8ym4BGiL')
-BTC_USD = lp.AssetPair(BTC, USD)
-myOrder = myAddress.buy(assetPair = BTC_USD, amount = 15e8, price = 95075)
-
-# post a sell order
-WCT = lp.Asset('6wuo2hTaDyPQVceETj1fc5p4WoMVCGMYNASN8ym4BGiL')
-Incent = lp.Asset('FLbGXzrpqkvucZqsHDcNxePTkh2ChmEi4GdBfDRRJVof')
-WCT_Incent = lp.AssetPair(WCT, Incent)
-myOrder = myAddress.sell(assetPair = WCT_Incent, amount = 100e8, price = 25e8)
-
-# post a buy order using Lunes as price asset
-BTC = lp.Asset('4ZzED8WJXsvuo2MEm2BmZ87Azw8Sx7TVC6ufSUA5LyTV')
-BTC_WAVES = lp.AssetPair(BTC, lp.WAVES)
-myOrder = myAddress.buy(assetPair = BTC_WAVES, amount = 1e8, price = 50e8)
-
-# cancel an order
-myOrder.cancel()
-# or
-myAddress.cancelOrder(assetPair, myOrder)
-
-```
-
-#### Getting Market Data from Lunes Data Feed (WDF):
-```python	
-import lunespy as lp
-
-# set the asset pair
-WAVES_BTC = lp.AssetPair(lp.WAVES, lp.BTC)
-
-# get last price and volume
-print("%s %s" % (WAVES_BTC.last(), WAVES_BTC.volume()))
-
-# get ticker
-ticker = WAVES_BTC.ticker()
-print(ticker['24h_open'])
-print(ticker['24h_vwap'])
-
-# get last 10 trades
-trades = WAVES_BTC.trades(10)
-for t in trades:
-	print("%s %s %s %s" % (t['buyer'], t['seller'], t['price'], t['amount']))
-	
-# get last 10 daily OHLCV candles
-ohlcv = WAVES_BTC.candles(1440, 10)
-for t in ohlcv:
-	print("%s %s %s %s %s" % (t['open'], t['high'], t['low'], t['close'], t['volume']))
-```
-
 #### LPOS
 ```python
 import lunespy as lp
@@ -445,31 +322,6 @@ decimals = 2
 reissuable = False
 ```
 
-#### Post an order and check its status:
-```
->>> myOrder = myAddress.buy(lp.AssetPair(token1, token2), 1, 25)
->>> myOrder
-status = Accepted
-id = ARZdYgfXz3ksRMvhnGeLLJnn3CQnz7RCa7U6dVw3zert
-asset1 = AFzL992FQbhcgSZGKDKAiRWcjtthM55yVCE99hwbHf88
-asset2 = 49Aha2RR2eunR3KZFwedfdi7K9v5MLQbLYcmVdp2QkZT
-sender.address = 3P6WfA4qYtkgwVAsWiiB6yaea2X8zyXncJh
-sender.publicKey = EYNuSmW4Adtcc6AMCZyxkiHMPmF2BZ2XxvjpBip3UFZL
-matcher = http://127.0.0.1:6886
-```
-
-#### Cancel the order
-```
->>> myOrder.cancel()
->>> myOrder
-status = Cancelled
-id = ARZdYgfXz3ksRMvhnGeLLJnn3CQnz7RCa7U6dVw3zert
-asset1 = AFzL992FQbhcgSZGKDKAiRWcjtthM55yVCE99hwbHf88
-asset2 = 49Aha2RR2eunR3KZFwedfdi7K9v5MLQbLYcmVdp2QkZT
-sender.address = 3P6WfA4qYtkgwVAsWiiB6yaea2X8zyXncJh
-sender.publicKey = EYNuSmW4Adtcc6AMCZyxkiHMPmF2BZ2XxvjpBip3UFZL
-matcher = http://127.0.0.1:6886
-```
 
 ### Offline signing and custom timestamps
 
@@ -493,38 +345,6 @@ matcher = http://127.0.0.1:6886
 			   "signature": "YetPopTJWC4WBPXbneWv9g6YEp6J9g9rquZWjewjdQnFbmaxtXjrRsUu69NZzHebVzUGLrhQiFFoguXJwdUn8BH"}'}
 ```
 
-#### Offline signing time lock/unlock transactions:
-```
->>> import lunespy as lp
->>> lp.setOffline()
->>> myAddress=lp.Address(privateKey="F2jVbjrKzjUsZ1AQRdnd8MmxFc85NQz5jwvZX4BXswXv")
-# generate a lockbox address
->>> lockAddress=lp.Address()
-# sign the 'lock' tx to send 100e8 to the lockbox (valid on Nov 1st, 2017)
->>> myAddress.sendLunes(lockAddress, 100e8, timestamp=1509537600000)
-{'api-endpoint': '/assets/broadcast/transfer',
- 'api-type': 'POST',
- 'api-data': '{"fee": 100000,
-               "timestamp": 1509537600000,
-               "senderPublicKey": "27zdzBa1q46RCMamZ8gw2xrTGypZnbzXs5J1Y2HbUmEv",
-               "amount": 10000000000,
-               "attachment": "",
-               "recipient": "3P3UbyQM9W7WzTgjYkLuBrPZZeWsiUtCcpv",
-               "signature": "5VgT6qWxJwxEyrxFNfsi67QqbyUiGq9Ka7HVzgovRTTDT8nLRyuQv2wBAJQhRiXDkTTV6zsQmHnBkh8keCaFPoNT"}'}
-# sign the 'unlock' tx to send funds back to myAddress (valid on Jan 1st, 2020)
->>> lockAddress.sendLunes(myAddress, 100e8-200000, txFee=200000, timestamp=1577880000000)
-{'api-endpoint': '/assets/broadcast/transfer',
- 'api-type': 'POST',
- 'api-data': '{"fee": 200000,
-               "timestamp": 1577880000000,
-			   "senderPublicKey": "52XnBGnAVZmw1CHo9aJPiMsVMiTWeNGSNN9aYJ7cDtx4",
-			   "amount": 9999800000,
-			   "attachment": "",
-			   "recipient": "3P7tfdCaTyYCfg5ojxNahEJDSS4MZ7ybXBY",
-			   "signature": "3beyz1sqKefP96LaXWT3CxdPRW86DAxcj6wgWPyyKq3SgdotVqnKyWXDyeHnBzCq1nC7JA9CChTmo1c1iVAv6C4T"}'}
-# delete lockbox address and private key
->>> del lockAddress
-```
 
 ## Connecting to a different node or chain
 
